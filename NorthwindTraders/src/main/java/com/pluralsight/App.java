@@ -8,17 +8,22 @@ public class App {
                 "jdbc:mysql://localhost:3305/northwind",
                 "root",
                 "yearup")) {
-            Statement statement = connection.createStatement();
-            String query = "SELECT ProductName, UnitPrice FROM products";
-            ResultSet results = statement.executeQuery(query);
-            System.out.println("Product"+" ".repeat(28)+"Price");
-            System.out.println("%".repeat(41));
+            PreparedStatement preparedStatement=connection.prepareStatement("SELECT ProductID, ProductName, UnitPrice, UnitsInStock FROM products ");
+
+            ResultSet results =preparedStatement.executeQuery();
+            System.out.println("ID   Product"+" ".repeat(28)+"Price     UnitsInStock");
+            System.out.println("%".repeat(62));
             while (results.next()) {
+                String id= results.getString("ProductID");
                 String product = results.getString("ProductName");
                 Double price=Double.parseDouble(results.getString("UnitPrice"));
+                String stock= results.getString("UnitsInStock");
+                System.out.print(id+".".repeat(5-id.length()));
                 System.out.print(product);
                 System.out.print(".".repeat(35-product.length()));
-                System.out.printf("$%.2f\n",price);
+                System.out.printf("$%.2f",price);
+                System.out.print(".".repeat(9-String.format("%.2f",price).length()));
+                System.out.println(stock+".".repeat(12-stock.length()));
             }
 
         } catch (SQLException e) {
