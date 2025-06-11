@@ -1,5 +1,7 @@
 package com.pluralsight;
 
+import org.apache.commons.dbcp2.BasicDataSource;
+
 import java.sql.*;
 import java.util.Scanner;
 
@@ -8,10 +10,11 @@ public class App {
 
     public static void main(String[] args) {
         boolean running=true;
-        try(Connection connection = DriverManager.getConnection(
-                "jdbc:mysql://localhost:3305/northwind",
-                "root",
-                "yearup")) {
+        try(BasicDataSource dataSource=new BasicDataSource()) {
+            dataSource.setUrl("jdbc:mysql://localhost:3305/northwind");
+            dataSource.setUsername("root");
+            dataSource.setPassword("yearup");
+            Connection connection=dataSource.getConnection();
             while (running) {
                 printMenu();
                 String choice = input.nextLine().trim();
@@ -117,9 +120,10 @@ public class App {
     }
 
     public static void categories(Connection connection) {
-        try(PreparedStatement preparedStatement = connection.prepareStatement("SELECT CategoryID, CategoryName FROM categories Order BY CategoryID ");
-            ResultSet results = preparedStatement.executeQuery()) {
-            while(true){
+        while(true) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement("SELECT CategoryID, CategoryName FROM categories Order BY CategoryID ");
+                 ResultSet results = preparedStatement.executeQuery()) {
+
                 System.out.println("ID  Category");
                 System.out.println("%".repeat(22));
                 while (results.next()) {
@@ -133,8 +137,8 @@ public class App {
                 String choice = input.nextLine();
                 if (choice.matches("\\d+")) {
                     int id = Integer.parseInt(choice);
-                    try(PreparedStatement maxIdStatement = connection.prepareStatement("SELECT max(CategoryID) as maxID FROM categories ");
-                        ResultSet maxIdRe = maxIdStatement.executeQuery()) {
+                    try (PreparedStatement maxIdStatement = connection.prepareStatement("SELECT max(CategoryID) as maxID FROM categories ");
+                         ResultSet maxIdRe = maxIdStatement.executeQuery()) {
                         if (maxIdRe.next()) {
                             int maxId = maxIdRe.getInt("maxID");
                             if (id == 0) {
@@ -147,8 +151,7 @@ public class App {
                                 continue;
                             }
                         } else System.out.println("Could not retrieve category information");
-                    }
-                    catch (SQLException e){
+                    } catch (SQLException e) {
                         throw new RuntimeException(e);
                     }
                 } else {
@@ -157,10 +160,10 @@ public class App {
                     continue;
                 }
                 break;
+
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
-        }
-        catch (SQLException e){
-            throw new RuntimeException(e);
         }
     }
 }
